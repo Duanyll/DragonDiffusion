@@ -1,0 +1,37 @@
+{
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.autopep8",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "GitHub.copilot",
+                "ms-vscode.hexeditor"
+            ]
+        }
+    },
+    "capAdd": [
+        "SYS_PTRACE"
+    ],
+    "runArgs": [
+        // Enable host.docker.internal DNS name
+        "--add-host=host.docker.internal:host-gateway",
+        // Enable CUDA support
+        "--gpus",
+        "all"
+    ],
+    "mounts": [
+        // UNCOMMENT AND TYPE YOUR ABSOLUTE PATH TO THE DATASETS FOLDER
+        // "type=bind,source=/mnt/d/datasets/Pansharpening,target=/datasets"
+        "type=volume,source=hfhub_cache,target=/root/.cache/huggingface/hub/"
+    ],
+    "shutdownAction": "none",
+    "hostRequirements": {
+        "gpu": true
+    }
+}

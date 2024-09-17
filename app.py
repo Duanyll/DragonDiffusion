@@ -1,5 +1,5 @@
 from src.demo.download import download_all
-download_all()
+# download_all()
 
 from src.demo.demo import create_demo_move, create_demo_appearance, create_demo_drag, create_demo_face_drag, create_demo_paste
 from src.demo.model import DragonModels
@@ -8,7 +8,7 @@ import cv2
 import gradio as gr
 
 # main demo
-pretrained_model_path = "runwayml/stable-diffusion-v1-5"
+pretrained_model_path = "pt-sk/stable-diffusion-1.5"
 model = DragonModels(pretrained_model_path=pretrained_model_path)
 
 DESCRIPTION = '# 🐉🐉[DragonDiffusion V1.0](https://github.com/MC-E/DragonDiffusion)🐉🐉'
