@@ -3,6 +3,8 @@ from tqdm import tqdm
 import torch
 import numpy as np
 
+from torch.profiler import record_function
+
 class DDIMInversion:
     def __init__(self, model, NUM_DDIM_STEPS):
         self.model = model
@@ -10,6 +12,7 @@ class DDIMInversion:
         self.NUM_DDIM_STEPS = NUM_DDIM_STEPS
         self.prompt = None
     
+    @record_function("ddim_step")
     def next_step(self, model_output: Union[torch.FloatTensor, np.ndarray], timestep: int, sample: Union[torch.FloatTensor, np.ndarray]):
         timestep, next_timestep = min(timestep - self.scheduler.config.num_train_timesteps // self.scheduler.num_inference_steps, 999), timestep
         alpha_prod_t = self.scheduler.alphas_cumprod[timestep] if timestep >= 0 else self.scheduler.final_alpha_cumprod
@@ -20,6 +23,7 @@ class DDIMInversion:
         next_sample = alpha_prod_t_next ** 0.5 * next_original_sample + next_sample_direction
         return next_sample
     
+    @record_function("ddim_unet")
     def get_noise_pred_single(self, latents, t, context, iter_cur):
         noise_pred = self.model.unet(latents, t, encoder_hidden_states=context, iter_cur=iter_cur)["sample"]
         return noise_pred

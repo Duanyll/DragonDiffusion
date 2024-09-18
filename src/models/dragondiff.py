@@ -15,6 +15,8 @@ from src.unet.attention_processor import IPAttnProcessor, AttnProcessor, Resampl
 from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from src.models.Sampler import Sampler
 
+from torch.profiler import record_function
+
 class DragonPipeline:
     def __init__(self, sd_id='stabilityai/stable-diffusion-2-1', ip_id='models/ip_sd15_64.bin', NUM_DDIM_STEPS=50, precision=torch.float32, ip_scale=0):
         unet = DragonUNet2DConditionModel.from_pretrained(sd_id, subfolder="unet", torch_dtype=precision)
@@ -42,6 +44,7 @@ class DragonPipeline:
         self.load_adapter(ip_id, ip_scale)
 
     @torch.no_grad()
+    @record_function("decode_latents")
     def decode_latents(self, latents):
         latents = 1 / 0.18215 * latents
         img = self.pipe.vae.decode(latents).sample
@@ -52,12 +55,14 @@ class DragonPipeline:
         return img
 
     @torch.no_grad()
+    @record_function("image2latent")
     def image2latent(self, image):
         with torch.no_grad():
             latents = self.pipe.vae.encode(image)['latent_dist'].mean
             latents = latents * 0.18215
         return latents
 
+    @record_function("ddim_inv")
     def ddim_inv(self, latent, prompt, emb_im=None):
         ddim_inv = DDIMInversion(model=self.pipe, NUM_DDIM_STEPS=self.NUM_DDIM_STEPS)
         ddim_latents = ddim_inv.invert(ddim_latents=latent.unsqueeze(2), prompt=prompt, emb_im=emb_im)
@@ -77,6 +82,7 @@ class DragonPipeline:
         return image_proj_model
 
     @torch.inference_mode()
+    @record_function("get_image_embeds")
     def get_image_embeds(self, pil_image):
         if isinstance(pil_image, Image.Image):
             pil_image = [pil_image]
